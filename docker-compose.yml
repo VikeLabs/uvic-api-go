@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  api:
+    container_name: uvic-api-go
+    build: .
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/api
