@@ -16,7 +16,7 @@ information. The currently used tech stack:
 
 This project is open source and contributions are welcome. If you encounter a bug or have
 a feature request, please open an issue on the GitHub repository, and if you are interested
-in becoming a maintainer, pm Scott (_@Closepanda#7203)_) or Hal (_haln#0584_) on Discord!
+in becoming a maintainer, [_ Discord]()!
 
 NOTE: In the interest of learning and sharing knowledge, the current tech stack is beginner-friendly,
 frankly the Go language is beginner-friendly (have you used Rust before, _dammit_?!). You'd do well with
