@@ -12,39 +12,6 @@ information. The currently used tech stack:
 
 ## Get started
 
-- Assuming you have [installed Go](https://go.dev/doc/install).
-- Clone the repo with:
-
-```sh
-git clone git@github.com:VikeLabs/uvic-api-go.git
-```
-
-### Basic Go
-
-1. Install the dependencies:
-
-```sh
-go mod tidy
-```
-
-2. Install [air](https://github.com/cosmtrek/air), hot reloading module for Golang.
-
-```sh
-go install github.com/cosmtrek/air@latest
-```
-
-3. Run the server:
-
-```sh
-air
-```
-
-### Docker
-
-```sh
-docker compose up
-```
-
 ## Contributing
 
 This project is open source and contributions are welcome. If you encounter a bug or have
