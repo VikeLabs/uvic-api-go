@@ -1,36 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 
-	"github.com/VikeLabs/uvic-api-go/middlewares"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	api "github.com/VikeLabs/uvic-api-go/api"
 )
 
-var port string
-
-func init() {
-	port = os.Getenv("PORT")
-	if port == "" {
-		port = "8000"
-	}
-}
-
+// NOTE: This file is for running docker on development purposes only, don't edit
 func main() {
-	mux := chi.NewRouter()
-
-	// middlewares
-	mux.Use(middlewares.Recovery)
-	mux.Use(middlewares.SetContent)
-	mux.Use(middlewares.SetCache)
-	mux.Use(middleware.Logger)
-
-	fmt.Println("Listening on port", port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.HandlerFunc(api.Handler))
+	log.Println("Listening on port 8080")
+	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
 	}
 }
