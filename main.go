@@ -4,13 +4,21 @@ import (
 	"log"
 	"net/http"
 
-	api "github.com/VikeLabs/uvic-api-go/api"
+	"github.com/VikeLabs/uvic-api-go/modules/ssf"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-// NOTE: This file is for running docker on development purposes only, don't edit
 func main() {
-	mux := http.NewServeMux()
-	mux.Handle("/", http.HandlerFunc(api.Handler))
+	mux := chi.NewMux()
+
+	mux.Use(middleware.Recoverer)
+	mux.Use(middleware.Logger)
+
+	mux.Group(func(r chi.Router) {
+		r.Route("/ssf", ssf.Router)
+	})
+
 	log.Println("Listening on port 8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)

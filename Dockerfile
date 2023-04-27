@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.20.3-alpine3.17
+FROM golang:1.20
 WORKDIR /api
 COPY . .
-RUN go mod tidy
-RUN go install github.com/cosmtrek/air@latest
-EXPOSE 8000
-CMD ["air"]
+#RUN go get .
+#RUN go install github.com/cosmtrek/air@latest
+RUN CGO_ENABLED=1 GOOS=linux go build -o /app
+EXPOSE 8080
+CMD ["/app"]
