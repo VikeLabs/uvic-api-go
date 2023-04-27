@@ -12,12 +12,13 @@ func GetTerm() ([]BannerTerm, error) {
 		return nil, err
 	}
 
-	queries := make(url.Values)
-	queries["searchTerms"] = []string{""}
-	queries["offset"] = []string{"1"}
-	queries["max"] = []string{"500"}
+	query := map[string]string{
+		"searchTerms": "",
+		"offset":      "1",
+		"max":         "500",
+	}
 
-	u.RawQuery = queries.Encode()
+	setQueries(u, query)
 
 	var c http.Client
 
