@@ -1,5 +1,10 @@
 package banner
 
+type BannerTerm struct {
+	Code        string `json:"code"`
+	Description string `json:"description"`
+}
+
 type BannerResponse struct {
 	Success               bool        `json:"success"`
 	TotalCount            int64       `json:"totalCount"`
