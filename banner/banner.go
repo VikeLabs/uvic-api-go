@@ -2,6 +2,8 @@ package banner
 
 import (
 	"errors"
+	"net/http"
+	"net/url"
 )
 
 const (
@@ -11,3 +13,19 @@ const (
 var (
 	ErrBannerServer error = errors.New("ErrBanner")
 )
+
+type BannerClient http.Client
+
+func New(term BannerTerm) (*BannerClient, error) {
+
+	return nil, nil
+}
+
+func setQueries(u *url.URL, q map[string]string) {
+	s := make(url.Values)
+	for k, v := range q {
+		s[k] = []string{v}
+	}
+
+	u.RawQuery = s.Encode()
+}
