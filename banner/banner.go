@@ -8,16 +8,18 @@ import (
 )
 
 const (
-	BANNER_SSB      string = "https://banner.uvic.ca/StudentRegistrationSsb/ssb"
-	BANNER_PAGE_MAX uint   = 500
+	BANNER_SSB      string = "https://banner.uvic.ca/StudentRegistrationSsb/ssb/"
+	BANNER_PAGE_MAX int    = 500
 )
 
 var (
-	ErrBannerServer error = errors.New("BANNER request error")
+	ErrBannerServer      error = errors.New("BANNER request error")
+	ErrBannerEmptyOffset error = errors.New("BANNER offset empty")
 )
 
 type BannerClient struct {
 	http.Client
+	term string
 }
 
 // Set term and captures cookie set by Banner, used for subsequent Banner requests
@@ -41,11 +43,13 @@ func New(term *BannerTerm) (*BannerClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		return nil, ErrBannerServer
 	}
 
+	cx.term = term.Code
 	return &cx, nil
 }
 

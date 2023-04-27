@@ -43,7 +43,7 @@ type Datum struct {
 	CrossListCount                 interface{}       `json:"crossListCount"`
 	CrossListAvailable             interface{}       `json:"crossListAvailable"`
 	CreditHourHigh                 float64           `json:"creditHourHigh"`
-	CreditHourLow                  int64             `json:"creditHourLow"`
+	CreditHourLow                  float32           `json:"creditHourLow"`
 	CreditHourIndicator            string            `json:"creditHourIndicator"`
 	OpenSection                    bool              `json:"openSection"`
 	LinkIdentifier                 string            `json:"linkIdentifier"`

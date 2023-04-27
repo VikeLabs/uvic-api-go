@@ -44,7 +44,9 @@ class BannerClient(requests.Session):
             "pageOffset": offset * self._MAX_SIZE,
             "pageMaxSize": self._MAX_SIZE,
         }
-        resp = self.get(f"{self.banner_search_result}?{parse.urlencode(q)}")
+        url = f"{self.banner_search_result}?{parse.urlencode(q)}"
+        print(url)
+        resp = self.get(url)
         assert resp.status_code == 200
 
         payload = resp.json()
