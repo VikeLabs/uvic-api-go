@@ -11,5 +11,6 @@ func Router(r chi.Router) {
 	r.Route("/v0", func(r chi.Router) {
 		r.Use(jsonHeader)
 		r.Handle("/bldgs", http.HandlerFunc(features.BldgsController))
+		r.Handle("/bldgs/{id}", http.HandlerFunc(features.BldgIDController))
 	})
 }

@@ -35,7 +35,7 @@ func ErrInternalServer(err error) *Error {
 func (err *Error) HandleError(w http.ResponseWriter) {
 	w.WriteHeader(err.StatusCode)
 
-	errMsg := map[string]string{"error": "err.Msg"}
+	errMsg := map[string]string{"error": err.Msg}
 	if err := json.NewEncoder(w).Encode(&errMsg); err != nil {
 		panic(err)
 	}
