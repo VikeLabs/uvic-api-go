@@ -1,4 +1,4 @@
-package features
+package bldg
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/VikeLabs/uvic-api-go/modules/ssf/schemas"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -26,7 +27,7 @@ func newDB(ctx context.Context) *database {
 	return &database{db.WithContext(ctx)}
 }
 
-func (db *database) getBuildings(bldgs *[]Building) error {
+func (db *database) getBuildings(bldgs *[]schemas.Building) error {
 	result := db.Order("name ASC").Find(bldgs)
 	if err := result.Error; err != nil {
 		return err
