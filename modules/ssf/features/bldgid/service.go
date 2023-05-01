@@ -3,6 +3,7 @@ package bldgid
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,6 +28,26 @@ func getBuildingSchedules(query *lib.TimeQueries, bldgID uint64) (*schemas.Build
 		return nil, api.ErrNotFound(err, "Building not found")
 	}
 
+	// Get all rooms
+	var rooms []schemas.RoomSummary
+	if err := db.getRooms(bldg.ID, &rooms); err != nil {
+		log.Fatal(err) // TODO: handle err
+	}
+
+	// Get sessions per room
+
+	var out []RoomSchedule
+	for _, room := range rooms {
+		log.Println(room)
+		var buf RoomSchedule
+		if err := db.getRoomSchedule(room.ID, query.Day, &buf); err != nil {
+			log.Fatal(err) // TODO: handle err
+		}
+
+		out = append(out, buf)
+	}
+
+	log.Println(out)
 	return nil, nil
 }
 

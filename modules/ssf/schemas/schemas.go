@@ -11,7 +11,7 @@ type BuildingSummary struct {
 }
 
 type RoomSummary struct {
-	RoomID    uint64      `json:"room_id"`
+	ID        uint64      `json:"room_id"`
 	Room      string      `json:"room"`
 	NextClass interface{} `json:"next_class"`
 	Subject   interface{} `json:"subject"`

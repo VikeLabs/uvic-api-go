@@ -15,13 +15,13 @@ func Controller(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	val, err := lib.ParseQueries(r)
+	queries, err := lib.ParseQueries(r)
 	if err != nil {
 		err.HandleError(w)
 		return
 	}
 
-	data, err := getBuildingSchedules(val, bldgID)
+	data, err := getBuildingSchedules(queries, bldgID)
 	if err != nil {
 		err.HandleError(w)
 		return
