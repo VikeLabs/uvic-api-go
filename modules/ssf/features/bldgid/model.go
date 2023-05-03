@@ -19,16 +19,16 @@ type model struct {
 	*gorm.DB
 }
 
-type RoomSchedule struct {
+type Session struct {
 	TimeStartStr string `json:"time_start_str"`
 	ID           uint64 `json:"room_id"`
 	Room         string `json:"room" gorm:"room"`
 	Subject      string `json:"subject"`
-	TimeStartInt string `json:"-"`
-	TimeEndInt   string `json:"-"`
+	TimeStartInt uint64 `json:"-"`
+	TimeEndInt   uint64 `json:"-"`
 }
 
-func (db *model) getRoomSchedule(roomID uint64, query *lib.TimeQueries, buf *[]RoomSchedule) error {
+func (db *model) getRoomSchedule(roomID uint64, query *lib.TimeQueries, buf *[]Session) error {
 	sel := []string{
 		"sections.time_start_str",
 		"rooms.id",
