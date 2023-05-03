@@ -21,7 +21,7 @@ type model struct {
 
 type RoomSchedule struct {
 	TimeStartStr string `json:"time_start_str"`
-	RoomID       uint64 `json:"room_id" gorm:"rooms.id"`
+	ID           uint64 `json:"room_id"`
 	Room         string `json:"room" gorm:"room"`
 	Subject      string `json:"subject"`
 	TimeStartInt string `json:"-"`
@@ -29,23 +29,25 @@ type RoomSchedule struct {
 }
 
 func (db *model) getRoomSchedule(roomID uint64, day string, buf *[]RoomSchedule) error {
-	sel := []string{
+	sql := db.Table("sections")
+	sql.Select([]string{
 		"sections.time_start_str",
 		"rooms.id",
 		"rooms.room",
 		"subjects.subject",
 		"sections.time_start_int",
 		"sections.time_end_int",
-	}
-	where := map[string]any{"sections.room_id": roomID, day: true} // TODO: change day
-
-	sql := db.Table("sections")
-	sql.Select(sel)
+	})
 	sql.Joins("JOIN rooms ON sections.room_id=rooms.id")
 	sql.Joins("JOIN subjects ON sections.subject_id=subjects.id")
-	sql.Where(where)
+	sql.Where(map[string]any{"sections.room_id": roomID, day: true})
+	sql.Where("sections.time_start_int>=?", 40000)
 	sql.Order("time_start_int ASC")
 	sql.Find(buf)
+
+	if sql.RowsAffected == 0 {
+		return ErrNoData
+	}
 
 	return sql.Error
 }
