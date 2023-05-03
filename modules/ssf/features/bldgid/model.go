@@ -28,7 +28,7 @@ type RoomSchedule struct {
 	TimeEndInt   string `json:"-"`
 }
 
-func (db *model) getRoomSchedule(roomID uint64, day uint64, buf *RoomSchedule) error {
+func (db *model) getRoomSchedule(roomID uint64, day string, buf *RoomSchedule) error {
 	sel := []string{
 		"sections.time_start_str",
 		"rooms.id",
@@ -37,7 +37,7 @@ func (db *model) getRoomSchedule(roomID uint64, day uint64, buf *RoomSchedule) e
 		"sections.time_start_int",
 		"sections.time_end_int",
 	}
-	where := map[string]any{"sections.room_id": roomID, "monday": true} // TODO: change day
+	where := map[string]any{"sections.room_id": roomID, day: true} // TODO: change day
 
 	sql := db.Table("sections")
 	sql.Select(sel)

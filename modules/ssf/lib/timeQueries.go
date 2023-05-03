@@ -11,7 +11,7 @@ import (
 type TimeQueries struct {
 	Hour   uint64
 	Minute uint64
-	Day    uint64
+	Day    uint8
 }
 
 var DayMap = map[int]string{
@@ -76,5 +76,5 @@ func ParseQueries(r *http.Request) (*TimeQueries, *api.Error) {
 		return nil, api.ErrBadRequest(err, "Bad value: day")
 	}
 
-	return &TimeQueries{hour, minute, day}, nil
+	return &TimeQueries{hour, minute, uint8(day)}, nil
 }

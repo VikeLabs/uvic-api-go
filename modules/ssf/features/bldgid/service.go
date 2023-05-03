@@ -36,7 +36,7 @@ func getBuildingSchedules(query *lib.TimeQueries, bldgID uint64) (*schemas.Build
 	var out []RoomSchedule
 	for _, room := range rooms {
 		var buf RoomSchedule
-		if err := db.getRoomSchedule(room.ID, query.Day, &buf); err != nil {
+		if err := db.getRoomSchedule(room.ID, lib.GetDay(query.Day), &buf); err != nil {
 			if errors.Is(err, ErrNoData) {
 				continue
 			}
