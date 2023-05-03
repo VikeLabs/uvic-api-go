@@ -1,8 +1,8 @@
 package schemas
 
 type Building struct {
-	ID   uint64 `json:"id"`
-	Name string `json:"name"`
+	ID   uint64 `json:"id" gorm:"id"`
+	Name string `json:"name" gorm:"name"`
 }
 
 type BuildingSummary struct {
@@ -11,8 +11,8 @@ type BuildingSummary struct {
 }
 
 type RoomSummary struct {
-	ID        uint64      `json:"room_id"`
-	Room      string      `json:"room"`
-	NextClass interface{} `json:"next_class"`
-	Subject   interface{} `json:"subject"`
+	ID        uint64  `json:"room_id"`
+	Room      string  `json:"room"`
+	NextClass *string `json:"next_class"`
+	Subject   *string `json:"subject"`
 }

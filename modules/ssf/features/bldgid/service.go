@@ -15,6 +15,7 @@ import (
 )
 
 func getBuildingSchedules(query *lib.TimeQueries, bldgID uint64) (*schemas.BuildingSummary, *api.Error) {
+	// TODO: handle error
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -22,28 +23,26 @@ func getBuildingSchedules(query *lib.TimeQueries, bldgID uint64) (*schemas.Build
 
 	bldg := schemas.Building{ID: bldgID}
 	if err := db.getBuildingName(&bldg); err != nil {
-		if errors.Is(err, ErrBadQuery) {
-			return nil, api.ErrBadRequest(err, "Missing building ID")
-		}
-		return nil, api.ErrNotFound(err, "Building not found")
+		panic(err)
 	}
 
 	// Get all rooms
 	var rooms []schemas.RoomSummary
-	if err := db.getRooms(bldg.ID, &rooms); err != nil {
-		log.Fatal(err) // TODO: handle err
+	if err := db.getRooms(bldgID, &rooms); err != nil {
+		panic(err)
 	}
 
 	// Get sessions per room
-
 	var out []RoomSchedule
 	for _, room := range rooms {
-		log.Println(room)
 		var buf RoomSchedule
 		if err := db.getRoomSchedule(room.ID, query.Day, &buf); err != nil {
-			log.Fatal(err) // TODO: handle err
+			if errors.Is(err, ErrNoData) {
+				continue
+			}
+			panic(err)
 		}
-
+		buf.RoomID = room.ID
 		out = append(out, buf)
 	}
 

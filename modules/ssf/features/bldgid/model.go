@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	ErrNoData   error = errors.New("no data")
 	ErrBadQuery error = errors.New("bad query param")
 )
 
@@ -44,7 +45,12 @@ func (db *model) getRoomSchedule(roomID uint64, day uint64, buf *RoomSchedule) e
 	sql.Joins("JOIN subjects ON sections.subject_id=subjects.id")
 	sql.Where(where)
 	sql.Order("time_start_int ASC")
-	sql.Scan(buf)
+	sql.Find(buf)
+
+	if sql.RowsAffected == 0 {
+		return ErrNoData
+	}
+
 	return sql.Error
 }
 
@@ -54,7 +60,7 @@ func (db *model) getRooms(bldgID uint64, rooms *[]schemas.RoomSummary) error {
 	sql.Joins("JOIN buildings ON rooms.building_id=buildings.id")
 	sql.Where("buildings.id=?", bldgID)
 	sql.Order("room ASC")
-	sql.Find(rooms)
+	sql.Scan(rooms)
 	return sql.Error
 }
 
