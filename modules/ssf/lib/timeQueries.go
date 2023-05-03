@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -11,6 +12,37 @@ type TimeQueries struct {
 	Hour   uint64
 	Minute uint64
 	Day    uint64
+}
+
+var DayMap = map[int]string{
+	0: "sunday",
+	1: "monday",
+	2: "tuesday",
+	3: "wednesday",
+	4: "thursday",
+	5: "friday",
+	6: "saturday",
+}
+
+func GetDay(day uint8) string {
+	switch day {
+	case 0:
+		return "sunday"
+	case 1:
+		return "monday"
+	case 2:
+		return "tuesday"
+	case 3:
+		return "wednesday"
+	case 4:
+		return "thursday"
+	case 5:
+		return "friday"
+	case 6:
+		return "saturday"
+	default:
+		panic(fmt.Sprintf("invalid value, `day` less than 6, got %d", day))
+	}
 }
 
 func ParseQueries(r *http.Request) (*TimeQueries, *api.Error) {
