@@ -21,14 +21,14 @@ type model struct {
 
 type RoomSchedule struct {
 	TimeStartStr string `json:"time_start_str"`
-	RoomID       uint64 `json:"room_id"`
-	RoomName     string `json:"room"`
+	RoomID       uint64 `json:"room_id" gorm:"rooms.id"`
+	Room         string `json:"room" gorm:"room"`
 	Subject      string `json:"subject"`
 	TimeStartInt string `json:"-"`
 	TimeEndInt   string `json:"-"`
 }
 
-func (db *model) getRoomSchedule(roomID uint64, day string, buf *RoomSchedule) error {
+func (db *model) getRoomSchedule(roomID uint64, day string, buf *[]RoomSchedule) error {
 	sel := []string{
 		"sections.time_start_str",
 		"rooms.id",
@@ -46,10 +46,6 @@ func (db *model) getRoomSchedule(roomID uint64, day string, buf *RoomSchedule) e
 	sql.Where(where)
 	sql.Order("time_start_int ASC")
 	sql.Find(buf)
-
-	if sql.RowsAffected == 0 {
-		return ErrNoData
-	}
 
 	return sql.Error
 }

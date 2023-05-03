@@ -2,6 +2,7 @@ package bldgid
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -35,18 +36,24 @@ func getBuildingSchedules(query *lib.TimeQueries, bldgID uint64) (*schemas.Build
 	// Get sessions per room
 	var out []RoomSchedule
 	for _, room := range rooms {
-		var buf RoomSchedule
+		var buf []RoomSchedule
 		if err := db.getRoomSchedule(room.ID, lib.GetDay(query.Day), &buf); err != nil {
 			if errors.Is(err, ErrNoData) {
 				continue
 			}
 			panic(err)
 		}
-		buf.RoomID = room.ID
-		out = append(out, buf)
+		log.Println(buf)
+		// buf.RoomID = room.ID
+		// buf.RoomName = room.Room
+		// out = append(out, buf)
 	}
 
-	log.Println(out)
+	for _, session := range out {
+		buf, _ := json.MarshalIndent(session, "", "  ")
+		log.Println(string(buf))
+	}
+
 	return nil, nil
 }
 

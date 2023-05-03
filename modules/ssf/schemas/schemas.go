@@ -16,3 +16,10 @@ type RoomSummary struct {
 	NextClass *string `json:"next_class"`
 	Subject   *string `json:"subject"`
 }
+
+type Room struct {
+	ID         uint64   `json:"id"`
+	Room       string   `json:"room"`
+	Building   Building `json:"-"`
+	BuildingID uint64   `json:"building_id"`
+}
