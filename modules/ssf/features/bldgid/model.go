@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/VikeLabs/uvic-api-go/modules/ssf/lib"
+	"github.com/VikeLabs/uvic-api-go/modules/ssf/lib/database"
 	"github.com/VikeLabs/uvic-api-go/modules/ssf/schemas"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -28,21 +28,29 @@ type RoomSchedule struct {
 	TimeEndInt   string `json:"-"`
 }
 
-func (db *model) getRoomSchedule(roomID uint64, day string, buf *[]RoomSchedule) error {
-	sql := db.Table("sections")
-	sql.Select([]string{
+func (db *model) getRoomSchedule(roomID uint64, query *lib.TimeQueries, buf *[]RoomSchedule) error {
+	sel := []string{
 		"sections.time_start_str",
 		"rooms.id",
 		"rooms.room",
 		"subjects.subject",
 		"sections.time_start_int",
 		"sections.time_end_int",
-	})
+	}
+
+	filter := map[string]any{
+		"sections.room_id": roomID,
+		query.Day:          true,
+	}
+
+	sql := db.Table(database.Sections)
+	sql.Select(sel)
 	sql.Joins("JOIN rooms ON sections.room_id=rooms.id")
 	sql.Joins("JOIN subjects ON sections.subject_id=subjects.id")
-	sql.Where(map[string]any{"sections.room_id": roomID, day: true})
-	sql.Where("sections.time_start_int>=?", 40000)
+	sql.Where(filter)
+	sql.Where("sections.time_start_int >= ?", query.Time)
 	sql.Order("time_start_int ASC")
+	sql.Limit(2)
 	sql.Find(buf)
 
 	if sql.RowsAffected == 0 {
@@ -53,7 +61,7 @@ func (db *model) getRoomSchedule(roomID uint64, day string, buf *[]RoomSchedule)
 }
 
 func (db *model) getRooms(bldgID uint64, rooms *[]schemas.RoomSummary) error {
-	sql := db.Table("rooms")
+	sql := db.Table(database.Rooms)
 	sql.Select("rooms.id", "rooms.room")
 	sql.Joins("JOIN buildings ON rooms.building_id=buildings.id")
 	sql.Where("buildings.id=?", bldgID)
@@ -70,10 +78,5 @@ func (db *model) getBuildingName(bldg *schemas.Building) error {
 }
 
 func newDB(ctx context.Context) *model {
-	path := lib.GetDSN()
-	db, err := gorm.Open(sqlite.Open(path))
-	if err != nil {
-		panic(err)
-	}
-	return &model{db.WithContext(ctx)}
+	return &model{database.New(ctx)}
 }
