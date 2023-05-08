@@ -2,8 +2,7 @@ package database
 
 import (
 	"context"
-	"os"
-	"strings"
+	"log"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -16,16 +15,10 @@ const (
 )
 
 func New(ctx context.Context) *gorm.DB {
-	path := getDSN()
-	db, err := gorm.Open(sqlite.Open(path))
+	db, err := gorm.Open(sqlite.Open("database.db"))
+	log.Println("Connected to db")
 	if err != nil {
 		panic(err)
 	}
 	return db.WithContext(ctx)
-}
-
-func getDSN() string {
-	p := []string{"modules", "ssf", "database.db"}
-	path := strings.Join(p, string(os.PathSeparator))
-	return path
 }
