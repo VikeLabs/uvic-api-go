@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"log"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -16,7 +15,6 @@ const (
 
 func New(ctx context.Context) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open("database.db"))
-	log.Println("Connected to db")
 	if err != nil {
 		panic(err)
 	}

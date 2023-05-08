@@ -15,7 +15,7 @@ type Versions struct {
 func GetVersions() (*Versions, error) {
 	var buf Versions
 
-	f, err := os.ReadFile("./config/db/versions.yml")
+	f, err := os.ReadFile("./config/versions.yml")
 	if err != nil {
 		return nil, err
 	}

@@ -11,6 +11,7 @@ import (
 func Router(r chi.Router) {
 	r.Route("/v0", func(r chi.Router) {
 		r.Use(jsonHeader)
+		r.Use(cache)
 		r.Handle("/bldgs", http.HandlerFunc(bldg.Controller))
 		r.Handle("/bldgs/{id}", http.HandlerFunc(bldgid.Controller))
 	})
