@@ -9,9 +9,7 @@ import (
 )
 
 func Router(r chi.Router) {
-	r.Route("/v0", func(r chi.Router) {
-		r.Use(jsonHeader)
-		r.Handle("/bldgs", http.HandlerFunc(bldg.Controller))
-		r.Handle("/bldgs/{id}", http.HandlerFunc(bldgid.Controller))
-	})
+	r.Use(jsonHeader)
+	r.Handle("/buildings", http.HandlerFunc(bldg.Controller))
+	r.Handle("/buildings/{id}", http.HandlerFunc(bldgid.Controller))
 }

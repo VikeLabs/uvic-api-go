@@ -3,31 +3,21 @@ package bldg
 import (
 	"context"
 	"errors"
-	"os"
-	"strings"
 
+	"github.com/VikeLabs/uvic-api-go/lib/database"
 	"github.com/VikeLabs/uvic-api-go/modules/ssf/schemas"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-type database struct {
+type model struct {
 	*gorm.DB
 }
 
-func newDB(ctx context.Context) *database {
-	p := []string{"modules", "ssf", "database.db"}
-	path := strings.Join(p, string(os.PathSeparator))
-
-	db, err := gorm.Open(sqlite.Open(path))
-	if err != nil {
-		panic(err)
-	}
-
-	return &database{db.WithContext(ctx)}
+func newDB(ctx context.Context) *model {
+	return &model{database.New(ctx)}
 }
 
-func (db *database) getBuildings(bldgs *[]schemas.Building) error {
+func (db *model) getBuildings(bldgs *[]schemas.Building) error {
 	result := db.Order("name ASC").Find(bldgs)
 	if err := result.Error; err != nil {
 		return err
