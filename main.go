@@ -16,8 +16,6 @@ func main() {
 	mux.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET"},
-		AllowedHeaders: []string{"If-None-Match"},
-		ExposedHeaders: []string{"ETag"},
 	}))
 
 	mux.Use(middleware.Recoverer)

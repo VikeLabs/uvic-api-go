@@ -10,7 +10,6 @@ import (
 
 func Router(r chi.Router) {
 	r.Use(jsonHeader)
-	r.Use(cache)
 	r.Handle("/buildings", http.HandlerFunc(bldg.Controller))
 	r.Handle("/buildings/{id}", http.HandlerFunc(bldgid.Controller))
 }
