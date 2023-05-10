@@ -17,6 +17,7 @@ func main() {
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET"},
 		AllowedHeaders: []string{"If-None-Match"},
+		ExposedHeaders: []string{"ETag"},
 	}))
 
 	mux.Use(middleware.Recoverer)
