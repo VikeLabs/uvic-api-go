@@ -14,9 +14,9 @@ func main() {
 	mux := chi.NewMux()
 
 	mux.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET"},
-		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type"},
+		AllowedHeaders: []string{"If-None-Match"},
 	}))
 
 	mux.Use(middleware.Recoverer)
