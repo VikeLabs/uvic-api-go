@@ -2,6 +2,8 @@ package database
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -14,7 +16,10 @@ const (
 )
 
 func New(ctx context.Context) *gorm.DB {
-	path := "database.db"
+	path := strings.Join(
+		[]string{"database", "database.db"},
+		string(os.PathSeparator),
+	)
 	db, err := gorm.Open(sqlite.Open(path))
 	if err != nil {
 		panic(err)

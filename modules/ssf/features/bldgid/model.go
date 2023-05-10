@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/VikeLabs/uvic-api-go/lib/database"
+	"github.com/VikeLabs/uvic-api-go/database"
 	"github.com/VikeLabs/uvic-api-go/modules/ssf/lib"
 	"github.com/VikeLabs/uvic-api-go/modules/ssf/schemas"
 	"gorm.io/gorm"
