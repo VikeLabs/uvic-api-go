@@ -17,7 +17,7 @@ projects to access and utilize this information.
 - Start a dev server with docker!
 
   ```sh
-  docker compose up
+  docker compose up # no hot reload, use air instead (see below)
   ```
 
 - If Docker is not an option, assume Go is
