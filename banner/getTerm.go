@@ -2,6 +2,7 @@ package banner
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -28,7 +29,7 @@ func GetTerm() ([]BannerTerm, error) {
 	}
 
 	if res.StatusCode != 200 {
-		return nil, ErrBannerServer
+		return nil, fmt.Errorf("banner server status: %d", res.StatusCode)
 	}
 
 	var terms []BannerTerm
