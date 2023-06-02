@@ -2,13 +2,14 @@ package banner
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 )
 
 const (
-	BANNER_SSB      string = "https://banner.uvic.ca/StudentRegistrationSsb/ssb/"
+	bannerSsb       string = "https://banner.uvic.ca/StudentRegistrationSsb/ssb/"
 	BANNER_PAGE_MAX int    = 500
 )
 
@@ -23,7 +24,7 @@ type BannerClient struct {
 }
 
 // Set term and captures cookie set by Banner, used for subsequent Banner requests
-func New(term *BannerTerm) (*BannerClient, error) {
+func New(term string) (*BannerClient, error) {
 	cookies, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, err
@@ -32,24 +33,24 @@ func New(term *BannerTerm) (*BannerClient, error) {
 	var cx BannerClient
 	cx.Jar = cookies
 
-	u, err := url.Parse(BANNER_SSB + "term/search")
+	u, err := url.Parse(bannerSsb + "term/search")
 	if err != nil {
 		return nil, err
 	}
 
 	setQueries(u, map[string]string{"mode": "search"})
 
-	response, err := cx.PostForm(u.String(), url.Values{"term": []string{term.Code}})
+	response, err := cx.PostForm(u.String(), url.Values{"term": []string{term}})
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, ErrBannerServer
+		return nil, fmt.Errorf("BANNER server response: %d", response.StatusCode)
 	}
 
-	cx.term = term.Code
+	cx.term = term
 	return &cx, nil
 }
 
