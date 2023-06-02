@@ -9,7 +9,7 @@ import (
 )
 
 func (cx *BannerClient) GetData(offset, maxSize int) (*BannerResponse, error) {
-	if maxSize > BANNER_PAGE_MAX || maxSize < 0 {
+	if maxSize > PageMaxSize || maxSize < 0 {
 		fmt.Println("max size out of range: 0 <= maxSize <= 500")
 		os.Exit(1)
 	}
@@ -43,7 +43,7 @@ func (cx *BannerClient) GetData(offset, maxSize int) (*BannerResponse, error) {
 	}
 
 	if buf.Data == nil || len(buf.Data) == 0 {
-		return nil, ErrBannerEmptyOffset
+		return nil, ErrEmptyOffset
 	}
 
 	return &buf, nil

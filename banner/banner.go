@@ -9,13 +9,12 @@ import (
 )
 
 const (
-	bannerSsb       string = "https://banner.uvic.ca/StudentRegistrationSsb/ssb/"
-	BANNER_PAGE_MAX int    = 500
+	bannerSsb   string = "https://banner.uvic.ca/StudentRegistrationSsb/ssb/"
+	PageMaxSize int    = 500
 )
 
 var (
-	ErrBannerServer      error = errors.New("BANNER request error")
-	ErrBannerEmptyOffset error = errors.New("BANNER offset empty")
+	ErrEmptyOffset error = errors.New("BANNER offset empty")
 )
 
 type BannerClient struct {
