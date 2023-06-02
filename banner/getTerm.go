@@ -7,7 +7,7 @@ import (
 )
 
 func GetTerm() ([]BannerTerm, error) {
-	u, err := url.Parse(BANNER_SSB + "/classSearch/getTerms")
+	u, err := url.Parse(bannerSsb + "/classSearch/getTerms")
 	if err != nil {
 		return nil, err
 	}
