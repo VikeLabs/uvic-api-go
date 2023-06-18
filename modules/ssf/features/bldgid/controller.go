@@ -5,25 +5,26 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/VikeLabs/uvic-api-go/lib/api"
 	"github.com/VikeLabs/uvic-api-go/modules/ssf/lib"
 )
 
 func Controller(w http.ResponseWriter, r *http.Request) {
 	bldgID, err := getBldgID(r)
 	if err != nil {
-		err.HandleError(w)
+		api.ResponseBuilder(w).Error(err)
 		return
 	}
 
 	queries, err := lib.ParseQueries(r)
 	if err != nil {
-		err.HandleError(w)
+		api.ResponseBuilder(w).Error(err)
 		return
 	}
 
 	data, err := getBuildingSchedules(queries, bldgID)
 	if err != nil {
-		err.HandleError(w)
+		api.ResponseBuilder(w).Error(err)
 		return
 	}
 

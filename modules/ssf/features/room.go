@@ -25,13 +25,14 @@ func (db *state) GetRoomSchedule(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "id")
 	if roomID == "" {
 		err := api.ErrBadRequest(nil, "missing url param: room id")
-		err.HandleError(w)
+		api.ResponseBuilder(w).Error(err)
 		return
 	}
 
 	var data []scheduleQuery
 	if err := db.getRoomSchedules(roomID, &data); err != nil {
-		api.ErrInternalServer(err).HandleError(w)
+		err := api.ErrInternalServer(err)
+		api.ResponseBuilder(w).Error(err)
 		return
 	}
 
