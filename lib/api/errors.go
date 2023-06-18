@@ -1,15 +1,14 @@
 package api
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 )
 
 type Error struct {
-	Err        error
-	StatusCode int
-	Msg        string
+	err        error
+	statusCode int
+	msg        string
 }
 
 func newErr(err error, statusCode int, msg string) *Error {
@@ -30,13 +29,4 @@ func ErrBadRequest(err error, msg string) *Error {
 
 func ErrInternalServer(err error) *Error {
 	return newErr(err, http.StatusInternalServerError, "")
-}
-
-func (err *Error) HandleError(w http.ResponseWriter) {
-	w.WriteHeader(err.StatusCode)
-
-	errMsg := map[string]string{"error": err.Msg}
-	if err := json.NewEncoder(w).Encode(&errMsg); err != nil {
-		panic(err)
-	}
 }
