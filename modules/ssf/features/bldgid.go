@@ -46,7 +46,9 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.ResponseBuilder(w).Status(http.StatusOK).JSON(buf)
+	api.ResponseBuilder(w).
+		Status(http.StatusOK).
+		JSON(buf)
 }
 
 func parseQueries(r *http.Request) (*timeQueries, *api.Error) {

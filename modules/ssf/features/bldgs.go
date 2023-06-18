@@ -14,12 +14,6 @@ type buildingQueries struct {
 	schemas.Building
 }
 
-// replace building name interface for gorm
-func (b *buildingQueries) AfterFind(tx *gorm.DB) error {
-	b.Name = strings.ReplaceAll(b.Name, "&amp;", "&")
-	return nil
-}
-
 func (db *state) Buildings(w http.ResponseWriter, r *http.Request) {
 	var bldgs []buildingQueries
 	if err := db.queryBuildings(&bldgs); err != nil {
@@ -28,7 +22,15 @@ func (db *state) Buildings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.ResponseBuilder(w).Status(http.StatusOK).JSON(bldgs)
+	api.ResponseBuilder(w).
+		Status(http.StatusOK).
+		JSON(bldgs)
+}
+
+// replace building name interface for gorm
+func (b *buildingQueries) AfterFind(tx *gorm.DB) error {
+	b.Name = strings.ReplaceAll(b.Name, "&amp;", "&")
+	return nil
 }
 
 func (db *state) queryBuildings(buf *[]buildingQueries) error {
