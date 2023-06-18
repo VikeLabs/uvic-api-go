@@ -20,6 +20,7 @@ func Router(r chi.Router) {
 	// r.Handle("/buildings", http.HandlerFunc(bldg.Controller))
 	// r.Handle("/buildings", http.HandlerFunc(handlers.BuildingID))
 	// r.Handle("/buildings/{id}", http.HandlerFunc(bldgid.Controller))
+	r.Handle("/buildings", http.HandlerFunc(handlers.Buildings))
 	r.Handle("/buildings/{id}", http.HandlerFunc(handlers.BuildingID))
 	r.Handle("/rooms/{id}", http.HandlerFunc(handlers.GetRoomSchedule))
 }
