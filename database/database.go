@@ -1,8 +1,6 @@
 package database
 
 import (
-	"context"
-	"log"
 	"os"
 	"strings"
 
@@ -27,10 +25,10 @@ const (
 	Rooms     string = "rooms"
 )
 
-func New(ctx context.Context) *gorm.DB {
+func New() (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open(databaseFile))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return db.WithContext(ctx)
+	return db, nil
 }

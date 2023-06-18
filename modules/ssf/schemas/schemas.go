@@ -1,7 +1,8 @@
 package schemas
 
 const (
-	TableSection = "sections"
+	TableSection   = "sections"
+	TableBuildings = "buildings"
 )
 
 type Building struct {
