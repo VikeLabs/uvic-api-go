@@ -70,7 +70,7 @@ func (db *state) getRoomSchedules(roomID string, data *[]scheduleQuery) error {
 
 func (r *roomSchedules) sortSection(s scheduleQuery) {
 	detail := scheduleEntry{
-		TimeStart: s.TimeEndStr,
+		TimeStart: s.TimeStartStr,
 		TimeEnd:   s.TimeEndStr,
 		Subject:   s.Subject,
 	}
