@@ -10,23 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type DbVersion struct {
-	StudySpaceFinder string `yaml:"ssf"`
-}
-
 var (
-	versionFile  string
 	databaseFile string
 )
 
 func init() {
 	databaseFile = strings.Join(
 		[]string{"database", "database.db"},
-		string(os.PathSeparator),
-	)
-
-	versionFile = strings.Join(
-		[]string{"database", "versions.yml"},
 		string(os.PathSeparator),
 	)
 }
