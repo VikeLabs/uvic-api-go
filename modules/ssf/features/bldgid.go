@@ -136,6 +136,8 @@ func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schema
 		return api.ErrInternalServer(result.Error)
 	}
 
+	roomMap := make(map[uint64]schemas.RoomSummary)
+
 	// get sessions in rooms
 	for _, room := range rooms {
 		var sessions []session
@@ -166,14 +168,36 @@ func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schema
 			return api.ErrInternalServer(result.Error)
 		}
 
-		nextSession := getNextSession(sessions, q.time)
-		if nextSession != nil {
-			rooms = append(rooms, *nextSession)
+		if len(sessions) == 0 {
+			roomMap[room.ID] = room
+			continue
 		}
+
+		nextSession := getNextSession(sessions, q.time)
+		if nextSession == nil {
+			roomMap[room.ID] = room
+		}
+
+		r, ok := roomMap[room.ID]
+		if !ok {
+			roomMap[room.ID] = *nextSession
+			continue
+		}
+
+		if r.NextClass == nil || r.Subject == nil {
+			continue
+		}
+
+		roomMap[room.ID] = *nextSession
+	}
+
+	r := make([]schemas.RoomSummary, 0, len(roomMap))
+	for _, v := range roomMap {
+		r = append(r, v)
 	}
 
 	buf.Building = bldg.Name
-	buf.Data = rooms
+	buf.Data = r
 	return nil
 }
 
@@ -182,10 +206,6 @@ NOTE: len of `sessions` is either 1 or 2, from sql query (limit 2) and empty
 session check
 */
 func getNextSession(sessions []session, currentTime uint64) *schemas.RoomSummary {
-	if len(sessions) == 0 {
-		// skips if no session found
-		return nil
-	}
 	// one class found
 	if len(sessions) == 1 {
 		session := sessions[0]
