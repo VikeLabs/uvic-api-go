@@ -1,4 +1,4 @@
-from typing import List
+from typing import List 
 import requests
 from urllib import parse
 
@@ -29,11 +29,10 @@ class BannerClient(requests.Session):
         term = response.json()[0]  # first entry = latest term
         description = term["description"]
         code = term["code"]
-        self.term = code
 
         return Term(code, description)
 
-    def set_term(self):
+    def set_term(self, term = ""):
         assert self.term != ""
         res = self.post(self.banner_set_term, data={"term": self.term})
         assert res.status_code == 200

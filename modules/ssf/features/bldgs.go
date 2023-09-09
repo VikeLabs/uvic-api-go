@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/VikeLabs/uvic-api-go/database"
 	"github.com/VikeLabs/uvic-api-go/lib/api"
 	"github.com/VikeLabs/uvic-api-go/modules/ssf/schemas"
 	"gorm.io/gorm"
@@ -34,6 +33,5 @@ func (b *buildingQueries) AfterFind(tx *gorm.DB) error {
 }
 
 func (db *state) queryBuildings(buf *[]buildingQueries) error {
-	return db.Table(database.Buildings).
-		Find(buf).Error
+	return db.Table(tableBuildings).Find(buf).Error
 }

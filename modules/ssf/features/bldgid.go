@@ -3,11 +3,9 @@ package features
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
-	"github.com/VikeLabs/uvic-api-go/database"
 	"github.com/VikeLabs/uvic-api-go/lib/api"
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
@@ -51,7 +49,7 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 	// get building room ids
 	var rooms []roomInfo
 	result := db.
-		Table(database.Rooms).
+		Table(tableRooms).
 		Select("rooms.id", "rooms.room").
 		Joins("JOIN buildings ON rooms.building_id=buildings.id").
 		Where("buildings.id=?", bldgID).
@@ -78,7 +76,7 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 			q.day:              true,
 		}
 
-		result = db.Table(database.Sections).
+		result = db.Table(tableSections).
 			Select(sel).
 			Joins("JOIN rooms ON sections.room_id=rooms.id").
 			Joins("JOIN subjects ON sections.subject_id=subjects.id").
@@ -87,8 +85,6 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 			Order("time_start_int ASC").
 			Limit(2).
 			Scan(&sessions)
-
-		log.Println(sessions)
 
 		// if no session is found, free til eod
 		// if time_end_int > current_time -> busy until time_end_int
