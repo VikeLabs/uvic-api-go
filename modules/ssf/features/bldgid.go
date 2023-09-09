@@ -1,13 +1,13 @@
 package features
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 
-	"github.com/VikeLabs/uvic-api-go/database"
 	"github.com/VikeLabs/uvic-api-go/lib/api"
-	"github.com/VikeLabs/uvic-api-go/modules/ssf/schemas"
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 )
@@ -18,65 +18,136 @@ type timeQueries struct {
 }
 
 type session struct {
-	TimeStartStr string `json:"time_start_str"`
-	ID           uint64 `json:"room_id"`
-	Room         string `json:"room" gorm:"room"`
+	ID           uint64 `json:"id"`
 	Subject      string `json:"subject"`
+	Description  string `json:"description"`
+	TimeStartStr string `json:"time_start"`
+	TimeEndStr   string `json:"time_end"`
+	Room         string `json:"-" gorm:"-"`
 	TimeStartInt uint64 `json:"-"`
 	TimeEndInt   uint64 `json:"-"`
 }
 
+type roomInfo struct {
+	ID           uint64   `json:"id"`
+	Room         string   `json:"room"`
+	NextClass    *session `json:"next_class" gorm:"-"`
+	CurrentClass *session `json:"current_class" gorm:"-"`
+}
+
 func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
-	bldgID := chi.URLParam(r, "id")
-	if bldgID == "" {
-		err := api.ErrBadRequest(nil, "missing url param: building id")
-		api.ResponseBuilder(w).Error(err)
+	bldgID, _err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 8)
+	if _err != nil {
+		api.ResponseBuilder(w).Error(api.ErrInternalServer(_err))
 		return
 	}
 
 	q, err := parseQueries(r)
 	if err != nil {
-		api.ResponseBuilder(w).Error(err)
+		api.ResponseBuilder(w).Error(api.ErrBadRequest(err, err.Error()))
 		return
 	}
 
-	var buf schemas.BuildingSummary
-	if err := db.getBuildingSchedules(q, bldgID, &buf); err != nil {
-		api.ResponseBuilder(w).Error(err)
-		return
+	// get building room ids
+	var rooms []roomInfo
+	result := db.
+		Table(tableRooms).
+		Select("rooms.id", "rooms.room").
+		Joins("JOIN buildings ON rooms.building_id=buildings.id").
+		Where("buildings.id=?", bldgID).
+		Order("room ASC").
+		Scan(&rooms)
+	if err := result.Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		api.ResponseBuilder(w).Error(api.ErrInternalServer(err))
 	}
 
-	api.ResponseBuilder(w).
-		Status(http.StatusOK).
-		JSON(buf)
+	// get session in room
+	for i, room := range rooms {
+		var sessions []session
+		sel := []string{
+			"sections.time_start_str",
+			"sections.time_end_str",
+			"sections.id",
+			"rooms.room",
+			"subjects.subject",
+			"subjects.description",
+			"sections.time_start_int",
+			"sections.time_end_int",
+		}
+		filter := map[string]any{
+			"sections.room_id": room.ID,
+			q.day:              true,
+		}
+
+		result = db.Table(tableSections).
+			Select(sel).
+			Joins("JOIN rooms ON sections.room_id=rooms.id").
+			Joins("JOIN subjects ON sections.subject_id=subjects.id").
+			Where(filter).
+			Where("sections.time_start_int >= ? OR sections.time_end_int >= ?", q.time, q.time).
+			Order("time_start_int ASC").
+			Limit(2).
+			Scan(&sessions)
+
+		// if no session is found, free til eod
+		// if time_end_int > current_time -> busy until time_end_int
+		// if time_start_int > current_time -> free until time_start_int
+		if len(sessions) == 0 {
+			continue
+		}
+
+		if len(sessions) == 1 {
+			if sessions[0].TimeStartInt > q.time {
+				rooms[i].NextClass = &sessions[0]
+			} else {
+				rooms[i].CurrentClass = &sessions[0]
+			}
+			continue
+		}
+
+		if sessions[0].TimeStartInt >= q.time {
+			rooms[i].NextClass = &sessions[0]
+			continue
+		}
+
+		if sessions[0].TimeEndInt >= q.time {
+			rooms[i].CurrentClass = &sessions[0]
+		} else if sessions[1].TimeStartInt >= q.time {
+			rooms[i].NextClass = &sessions[1]
+		} else {
+			rooms[i].CurrentClass = &sessions[1]
+		}
+	}
+
+	// sort by room
+	sort.Slice(rooms, func(i, j int) bool {
+		return rooms[i].Room < rooms[j].Room
+	})
+
+	api.ResponseBuilder(w).Status(http.StatusOK).JSON(&rooms)
 }
 
-func parseQueries(r *http.Request) (*timeQueries, *api.Error) {
+func parseQueries(r *http.Request) (*timeQueries, error) {
 	hourQuery := r.URL.Query().Get("hour")
-	if hourQuery == "" {
-		return nil, api.ErrBadRequest(nil, "Missing query: hour")
-	}
 	hour, err := strconv.ParseUint(hourQuery, 10, 8)
 	if err != nil || hour > 24 {
-		return nil, api.ErrBadRequest(err, "Bad value: hour")
+		return nil, err
 	}
 
 	minuteQuery := r.URL.Query().Get("minute")
-	if minuteQuery == "" {
-		return nil, api.ErrBadRequest(nil, "Missing query: minute")
-	}
 	minute, err := strconv.ParseUint(minuteQuery, 10, 8)
 	if err != nil || minute > 60 || (hour == 24 && minute != 0) {
-		return nil, api.ErrBadRequest(err, "Bad value: minute")
+		return nil, err
 	}
 
 	dayQuery := r.URL.Query().Get("day")
-	if dayQuery == "" {
-		return nil, api.ErrBadRequest(nil, "Missing query: day")
-	}
 	day, err := strconv.ParseUint(dayQuery, 0, 8)
-	if err != nil || day > 6 {
-		return nil, api.ErrBadRequest(err, "Bad value: day")
+	if err != nil {
+		return nil, err
+	}
+
+	if day > 6 {
+		return nil, errors.New("invalid day query")
 	}
 
 	timeToSecond := hour*3600 + minute*60
@@ -101,163 +172,5 @@ func getDay(day uint8) string {
 		return "saturday"
 	default:
 		panic(fmt.Sprintf("invalid value, `day` less than 6, got %d", day))
-	}
-}
-
-func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schemas.BuildingSummary) *api.Error {
-	var result *gorm.DB
-
-	// get building
-	var bldg schemas.Building
-	result = db.
-		Table(schemas.TableBuildings).
-		Where("id = ?", bldgID).
-		First(&bldg)
-
-	if result.Error != nil {
-		return api.ErrInternalServer(result.Error)
-	}
-
-	if result.RowsAffected == 0 {
-		return api.ErrNotFound(nil, "invalid building id")
-	}
-
-	// get all rooms in building
-	var rooms []schemas.RoomSummary
-	result = db.
-		Table(database.Rooms).
-		Select("rooms.id", "rooms.room").
-		Joins("JOIN buildings ON rooms.building_id=buildings.id").
-		Where("buildings.id=?", bldgID).
-		Order("room ASC").
-		Scan(&rooms)
-
-	if result.Error != nil {
-		return api.ErrInternalServer(result.Error)
-	}
-
-	roomMap := make(map[uint64]schemas.RoomSummary)
-
-	// get sessions in rooms
-	for _, room := range rooms {
-		var sessions []session
-		sel := []string{
-			"sections.time_start_str",
-			"rooms.id",
-			"rooms.room",
-			"subjects.subject",
-			"sections.time_start_int",
-			"sections.time_end_int",
-		}
-		filter := map[string]any{
-			"sections.room_id": room.ID,
-			q.day:              true,
-		}
-
-		result = db.Table(database.Sections).
-			Select(sel).
-			Joins("JOIN rooms ON sections.room_id=rooms.id").
-			Joins("JOIN subjects ON sections.subject_id=subjects.id").
-			Where(filter).
-			Where("sections.time_start_int >= ?", q.time).
-			Order("time_start_int ASC").
-			Limit(2).
-			Scan(&sessions)
-
-		if result.Error != nil {
-			return api.ErrInternalServer(result.Error)
-		}
-
-		if len(sessions) == 0 {
-			roomMap[room.ID] = room
-			continue
-		}
-
-		nextSession := getNextSession(sessions, q.time)
-		if nextSession == nil {
-			roomMap[room.ID] = room
-		}
-
-		r, ok := roomMap[room.ID]
-		if !ok {
-			roomMap[room.ID] = *nextSession
-			continue
-		}
-
-		if r.NextClass == nil || r.Subject == nil {
-			continue
-		}
-
-		roomMap[room.ID] = *nextSession
-	}
-
-	r := make([]schemas.RoomSummary, 0, len(roomMap))
-	for _, v := range roomMap {
-		r = append(r, v)
-	}
-
-	buf.Building = bldg.Name
-	buf.Data = r
-	return nil
-}
-
-/*
-NOTE: len of `sessions` is either 1 or 2, from sql query (limit 2) and empty
-session check
-*/
-func getNextSession(sessions []session, currentTime uint64) *schemas.RoomSummary {
-	// one class found
-	if len(sessions) == 1 {
-		session := sessions[0]
-		if isInRange(session.TimeStartInt, session.TimeEndInt, currentTime) {
-			return nil
-		}
-		freeEod := currentTime > session.TimeEndInt
-		return buildRoomInfo(session, freeEod)
-	}
-
-	prevSession := sessions[0]
-	if isInRange(prevSession.TimeStartInt, prevSession.TimeEndInt, currentTime) {
-		return nil
-	}
-
-	nextSession := sessions[1]
-	inBetweenSessions := isInRange(
-		prevSession.TimeEndInt,
-		nextSession.TimeStartInt,
-		currentTime,
-	)
-
-	if inBetweenSessions {
-		return buildRoomInfo(nextSession, false)
-	}
-
-	if nextSession.TimeEndInt <= currentTime {
-		return buildRoomInfo(nextSession, true)
-	}
-
-	return nil
-}
-
-func isInRange(timeStart, timeEnd, currentTime uint64) bool {
-	inRangeStart := timeStart <= currentTime
-	inRangeEnd := timeEnd >= currentTime
-	return inRangeStart && inRangeEnd
-}
-
-func buildRoomInfo(session session, freeEod bool) *schemas.RoomSummary {
-	nextSession := &session.TimeStartStr
-	subject := &session.Subject
-
-	if freeEod {
-		nextSession = nil
-		subject = nil
-	}
-
-	return &schemas.RoomSummary{
-		ID:        session.ID,
-		Room:      session.Room,
-		NextClass: nextSession,
-		Subject:   subject,
 	}
 }
