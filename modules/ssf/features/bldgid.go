@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/VikeLabs/uvic-api-go/lib/api"
@@ -17,11 +18,12 @@ type timeQueries struct {
 }
 
 type session struct {
+	ID           uint64 `json:"id"`
+	Subject      string `json:"subject"`
+	Description  string `json:"description"`
 	TimeStartStr string `json:"time_start"`
 	TimeEndStr   string `json:"time_end"`
-	ID           uint64 `json:"-" gorm:"-"`
 	Room         string `json:"-" gorm:"-"`
-	Subject      string `json:"subject"`
 	TimeStartInt uint64 `json:"-"`
 	TimeEndInt   uint64 `json:"-"`
 }
@@ -65,9 +67,10 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 		sel := []string{
 			"sections.time_start_str",
 			"sections.time_end_str",
-			"rooms.id",
+			"sections.id",
 			"rooms.room",
 			"subjects.subject",
+			"subjects.description",
 			"sections.time_start_int",
 			"sections.time_end_int",
 		}
@@ -116,6 +119,11 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// sort by room
+	sort.Slice(rooms, func(i, j int) bool {
+		return rooms[i].Room < rooms[j].Room
+	})
+
 	api.ResponseBuilder(w).Status(http.StatusOK).JSON(&rooms)
 }
 
@@ -134,8 +142,12 @@ func parseQueries(r *http.Request) (*timeQueries, error) {
 
 	dayQuery := r.URL.Query().Get("day")
 	day, err := strconv.ParseUint(dayQuery, 0, 8)
-	if err != nil || day > 6 {
+	if err != nil {
 		return nil, err
+	}
+
+	if day > 6 {
+		return nil, errors.New("invalid day query")
 	}
 
 	timeToSecond := hour*3600 + minute*60
