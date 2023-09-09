@@ -2,6 +2,7 @@ package features
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -123,7 +124,11 @@ func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schema
 	}
 
 	// get all rooms in building
-	var rooms []schemas.RoomSummary
+	type Room struct {
+		ID   uint64
+		Room string
+	}
+	var rooms []Room
 	result = db.
 		Table(database.Rooms).
 		Select("rooms.id", "rooms.room").
@@ -136,8 +141,7 @@ func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schema
 		return api.ErrInternalServer(result.Error)
 	}
 
-	roomMap := make(map[uint64]schemas.RoomSummary)
-
+	roomMap := make(map[uint64]Room)
 	// get sessions in rooms
 	for _, room := range rooms {
 		var sessions []session
@@ -159,7 +163,7 @@ func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schema
 			Joins("JOIN rooms ON sections.room_id=rooms.id").
 			Joins("JOIN subjects ON sections.subject_id=subjects.id").
 			Where(filter).
-			Where("sections.time_start_int >= ?", q.time).
+			Where("sections.time_start_int >= ? OR sections.time_end_int >= ?", q.time, q.time).
 			Order("time_start_int ASC").
 			Limit(2).
 			Scan(&sessions)
@@ -177,25 +181,11 @@ func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schema
 		if nextSession == nil {
 			roomMap[room.ID] = room
 		}
-
-		r, ok := roomMap[room.ID]
-		if !ok {
-			roomMap[room.ID] = *nextSession
-			continue
-		}
-
-		if r.NextClass == nil || r.Subject == nil {
-			continue
-		}
-
-		roomMap[room.ID] = *nextSession
+		log.Println(sessions)
 	}
 
+	log.Println(roomMap)
 	r := make([]schemas.RoomSummary, 0, len(roomMap))
-	for _, v := range roomMap {
-		r = append(r, v)
-	}
-
 	buf.Building = bldg.Name
 	buf.Data = r
 	return nil
