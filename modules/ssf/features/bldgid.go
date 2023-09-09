@@ -2,7 +2,6 @@ package features
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -27,11 +26,18 @@ type session struct {
 	TimeEndInt   uint64 `json:"-"`
 }
 
+type roomInfo struct {
+	ID        uint64   `json:"id"`
+	Room      string   `json:"room"`
+	Busy      bool     `json:"busy"`
+	NextClass *session `json:"next_class"`
+}
+
 func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
-	bldgID := chi.URLParam(r, "id")
-	if bldgID == "" {
-		err := api.ErrBadRequest(nil, "missing url param: building id")
-		api.ResponseBuilder(w).Error(err)
+	b := chi.URLParam(r, "id")
+	bldgID, _err := strconv.ParseUint(b, 10, 8)
+	if _err != nil {
+		api.ResponseBuilder(w).Error(api.ErrInternalServer(_err))
 		return
 	}
 
@@ -42,10 +48,8 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var buf schemas.BuildingSummary
-	if err := db.getBuildingSchedules(q, bldgID, &buf); err != nil {
-		api.ResponseBuilder(w).Error(err)
-		return
-	}
+
+	// get building room ids
 
 	api.ResponseBuilder(w).
 		Status(http.StatusOK).
@@ -54,27 +58,18 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 
 func parseQueries(r *http.Request) (*timeQueries, *api.Error) {
 	hourQuery := r.URL.Query().Get("hour")
-	if hourQuery == "" {
-		return nil, api.ErrBadRequest(nil, "Missing query: hour")
-	}
 	hour, err := strconv.ParseUint(hourQuery, 10, 8)
 	if err != nil || hour > 24 {
 		return nil, api.ErrBadRequest(err, "Bad value: hour")
 	}
 
 	minuteQuery := r.URL.Query().Get("minute")
-	if minuteQuery == "" {
-		return nil, api.ErrBadRequest(nil, "Missing query: minute")
-	}
 	minute, err := strconv.ParseUint(minuteQuery, 10, 8)
 	if err != nil || minute > 60 || (hour == 24 && minute != 0) {
 		return nil, api.ErrBadRequest(err, "Bad value: minute")
 	}
 
 	dayQuery := r.URL.Query().Get("day")
-	if dayQuery == "" {
-		return nil, api.ErrBadRequest(nil, "Missing query: day")
-	}
 	day, err := strconv.ParseUint(dayQuery, 0, 8)
 	if err != nil || day > 6 {
 		return nil, api.ErrBadRequest(err, "Bad value: day")
@@ -141,7 +136,7 @@ func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schema
 		return api.ErrInternalServer(result.Error)
 	}
 
-	roomMap := make(map[uint64]Room)
+	r := make([]schemas.RoomSummary, 0)
 	// get sessions in rooms
 	for _, room := range rooms {
 		var sessions []session
@@ -173,21 +168,18 @@ func (db *state) getBuildingSchedules(q *timeQueries, bldgID string, buf *schema
 		}
 
 		if len(sessions) == 0 {
-			roomMap[room.ID] = room
 			continue
 		}
 
 		nextSession := getNextSession(sessions, q.time)
-		if nextSession == nil {
-			roomMap[room.ID] = room
+		if r == nil {
+
 		}
-		log.Println(sessions)
+		r = append(r, *nextSession)
+		buf.Data = append(buf.Data, *nextSession)
 	}
 
-	log.Println(roomMap)
-	r := make([]schemas.RoomSummary, 0, len(roomMap))
 	buf.Building = bldg.Name
-	buf.Data = r
 	return nil
 }
 
