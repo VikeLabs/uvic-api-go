@@ -33,5 +33,5 @@ func (b *buildingQueries) AfterFind(tx *gorm.DB) error {
 }
 
 func (db *state) queryBuildings(buf *[]buildingQueries) error {
-	return db.Table(tableBuildings).Find(buf).Error
+	return db.Table(tableBuildings).Order("name ASC").Find(buf).Error
 }
