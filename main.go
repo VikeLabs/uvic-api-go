@@ -2,31 +2,19 @@ package main
 
 import (
 	"log"
-	"net/http"
 
-	"github.com/VikeLabs/uvic-api-go/modules/ssf"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
+	_ "github.com/VikeLabs/uvic-api-go/database"
+	"github.com/VikeLabs/uvic-api-go/handlers/ssf"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	mux := chi.NewMux()
+	app := fiber.New()
+	app.Route("/ssf", ssf.Router)
 
-	mux.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET"},
-	}))
-
-	mux.Use(middleware.Recoverer)
-	mux.Use(middleware.Logger)
-
-	mux.Group(func(r chi.Router) {
-		r.Route("/ssf", ssf.Router)
-	})
-
-	log.Println("Listening on port 8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	addr := "127.0.0.1:8080"
+	log.Println("Listening at", addr)
+	if err := app.Listen(addr); err != nil {
 		log.Fatal(err)
 	}
 }
