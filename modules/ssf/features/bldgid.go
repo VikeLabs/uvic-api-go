@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/VikeLabs/uvic-api-go/lib/api"
+	"github.com/VikeLabs/uvic-api-go/modules/ssf/schemas"
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 )
@@ -36,9 +37,9 @@ type roomInfo struct {
 }
 
 func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
-	bldgID, _err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 8)
-	if _err != nil {
-		api.ResponseBuilder(w).Error(api.ErrInternalServer(_err))
+	bldgID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 8)
+	if err != nil {
+		api.ResponseBuilder(w).Error(api.ErrInternalServer(err))
 		return
 	}
 
@@ -48,9 +49,17 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get building info
+	var bldg schemas.Building
+	result := db.Where("id = ?", bldgID).First(&bldg)
+	if err := result.Error; err != nil {
+		api.ResponseBuilder(w).Error(api.ErrInternalServer(err))
+		return
+	}
+
 	// get building room ids
 	var rooms []roomInfo
-	result := db.
+	result = db.
 		Table(tableRooms).
 		Select("rooms.id", "rooms.room").
 		Joins("JOIN buildings ON rooms.building_id=buildings.id").
@@ -124,7 +133,10 @@ func (db *state) BuildingID(w http.ResponseWriter, r *http.Request) {
 		return rooms[i].Room < rooms[j].Room
 	})
 
-	api.ResponseBuilder(w).Status(http.StatusOK).JSON(&rooms)
+	api.ResponseBuilder(w).Status(http.StatusOK).JSON(map[string]interface{}{
+		"rooms":    rooms,
+		"building": bldg,
+	})
 }
 
 func parseQueries(r *http.Request) (*timeQueries, error) {
