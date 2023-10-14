@@ -12,7 +12,7 @@ type Building struct {
 	Name string `json:"name"`
 }
 
-func Buildings(c *fiber.Ctx) error {
+func routeBuildings(c *fiber.Ctx) error {
 	db := database.New()
 
 	var building []Building
